@@ -1,0 +1,14 @@
+target/
+dist/
+*.log
+
+.opencode/
+.codebase-memory/
+.idea/
+.vscode/
+
+*.pdb
+*.exe
+*.dll
+*.dylib
+*.so
