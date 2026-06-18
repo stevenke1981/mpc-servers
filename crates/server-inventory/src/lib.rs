@@ -67,9 +67,9 @@ pub const SERVER_TARGETS: &[ServerTarget] = &[
         source: "stevenke1981/servers/src/filesystem",
         source_kind: SourceKind::UpstreamReference,
         upstream_version: Some("0.6.3"),
-        local_version: None,
+        local_version: Some("0.1.0"),
         decision: ReuseDecision::PortFromReference,
-        notes: "Port access-control, roots support, path validation, and structured content tests.",
+        notes: "Path safety core is implemented in crates/filesystem-server; file operation tools, roots support, and structured content tests are pending.",
     },
     ServerTarget {
         name: "git",

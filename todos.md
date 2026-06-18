@@ -133,15 +133,37 @@
 
 ## T4 Port Filesystem And Git
 
-- [ ] T4.1 Port `filesystem` path safety core.
+- [x] T4.1 Port `filesystem` path safety core.
   - Source: `.opencode/upstream/servers/src/filesystem`
-  - Suggested crate: `crates/filesystem-server`
+  - Crate: `crates/filesystem-server`
   - First deliverable: path validation module and tests
   - Acceptance:
     - rejects path traversal
     - rejects symlink escape
     - handles Windows case/canonicalization
     - supports command-line allowed directories
+  - Evidence:
+    - Crate: `crates/filesystem-server` with workspace member added
+    - Path safety core: `AllowedDirectories` struct with `from_existing_dirs`,
+      `validate_existing_path`, `validate_candidate_path`, `list_allowed_directories`
+    - Component‑based comparison in `is_subpath` — prevents prefix sibling attacks
+      (`/tmp/project` vs `/tmp/project2`);
+    - `normalize_path` resolves `.`/`..` without touching filesystem
+    - Null‑byte rejection in `has_null_bytes`
+    - Symlink handling: `validate_existing_path` uses `canonicalize` (resolves symlinks);
+      `validate_candidate_path` resolves deepest existing ancestor to detect symlink‑based escapes
+    - Windows case‑insensitive component comparison in `is_subpath` (guarded by `cfg(windows)`)
+    - Binary supports `--version`, `-V`, `version` (all print `0.1.0`)
+    - Minimal MCP handler — no file operation tools exposed in T4.1
+    - 37 unit tests: exact root, subpaths, prefix sibling, traversal, null bytes, inaccessible dirs,
+      no valid dirs, non‑existent candidate, symlink outside, symlink inside, symlink parent outside,
+      Windows case‑insensitive, `list_allowed_directories`, nested allowed dirs
+    - Verify: `cargo fmt --check` pass, `cargo test --all-targets` pass (72 total),
+      `cargo clippy --all-targets -- -D warnings` pass,
+      `cargo run -p filesystem-server -- --version` → `0.1.0`,
+      `cargo run -p filesystem-server -- -V` → `0.1.0`,
+      `cargo run -p filesystem-server -- version` → `0.1.0`
+    - Stdio smoke: initialize + `tools/list` returns 0 tools as expected for T4.1
 
 - [ ] T4.2 Port `filesystem` tools.
   - Depends on: T4.1
