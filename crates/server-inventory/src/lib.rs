@@ -9,6 +9,7 @@ pub enum SourceKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
 pub enum ReuseDecision {
     DirectUse,
+    ImplementedPort,
     PortFromReference,
     ReusePattern,
 }
@@ -84,9 +85,9 @@ pub const SERVER_TARGETS: &[ServerTarget] = &[
         source: "stevenke1981/servers/src/time",
         source_kind: SourceKind::UpstreamReference,
         upstream_version: Some("0.6.2"),
-        local_version: None,
-        decision: ReuseDecision::PortFromReference,
-        notes: "Small first Rust port candidate; verify timezone data behavior cross-platform.",
+        local_version: Some("0.1.0"),
+        decision: ReuseDecision::ImplementedPort,
+        notes: "Implemented in crates/time-server with get_current_time and convert_time.",
     },
     ServerTarget {
         name: "fetch",
@@ -102,9 +103,9 @@ pub const SERVER_TARGETS: &[ServerTarget] = &[
         source: "stevenke1981/servers/src/sequentialthinking",
         source_kind: SourceKind::UpstreamReference,
         upstream_version: Some("0.6.2"),
-        local_version: None,
-        decision: ReuseDecision::PortFromReference,
-        notes: "Lightweight stateful tool; good second port after time.",
+        local_version: Some("0.1.0"),
+        decision: ReuseDecision::ImplementedPort,
+        notes: "Implemented in crates/sequential-thinking-server with session-scoped thought and branch state.",
     },
     ServerTarget {
         name: "everything",

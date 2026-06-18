@@ -21,9 +21,9 @@
 | `memory` | TypeScript | `0.6.3` | 直接以 `memlong` 作為 Rust 線 |
 | `filesystem` | TypeScript | `0.6.3` | 需要 Rust port |
 | `git` | Python | `0.6.2` | 需要 Rust port |
-| `time` | Python | `0.6.2` | 需要 Rust port，適合第一個小型 port |
+| `time` | Python | `0.6.2` | 已 port：`crates/time-server` |
 | `fetch` | Python | `0.6.3` | 需要 Rust port，先定安全策略 |
-| `sequential-thinking` | TypeScript | `0.6.2` | 需要 Rust port，適合第二批 |
+| `sequential-thinking` | TypeScript | `0.6.2` | 已 port：`crates/sequential-thinking-server` |
 | `everything` | TypeScript | `2.0.0` | 作為 MCP protocol feature testbed |
 
 ## 可直接使用的既有專案
@@ -73,8 +73,8 @@ cargo run -p mcp-servers -- --version
 
 1. 整理 `cbm-mcp` 的 release/install 範式成 workspace 共用模板。
 2. 將 `memlong` 作為 `memory` server 線導入，並評估 `rmcp` 版本對齊。
-3. 先 port `time`，用它驗證 workspace crate、README、installer、release checklist。
-4. port `sequential-thinking`，驗證 stateful tool 模式。
+3. `time` 已 port，可用它驗證 workspace crate、README、installer、release checklist。
+4. `sequential-thinking` 已 port，可用它驗證 stateful tool 模式。
 5. port `filesystem` 和 `git`，這兩個需要較完整的安全邊界與 Windows path/process 測試。
 6. port `fetch`，先補 HTTP allowlist、redirect、content-size、SSRF 防護策略。
 7. 用 `everything` 建立 MCP feature compatibility testbed。

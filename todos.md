@@ -107,20 +107,29 @@
     - invalid timezone returns invalid params style MCP error
     - output includes timezone, datetime, day_of_week, is_dst
     - tests cover DST and multiple target timezones
-  - Evidence: commit `5341c99` — 16/16 tests, 0 clippy, 0 fmt.
+  - Evidence: 16 tests, 0 clippy, 0 fmt, `--version` outputs `0.1.0`, stdio `tools/list` smoke returns `get_current_time` and `convert_time`.
     - `test_get_current_time_valid_tz` + `test_convert_time_basic` verify IANA names
     - `test_get_current_time_invalid_timezone` verifies invalid param error
     - `test_convert_time_nepal_fractional` covers DST
     - `test_convert_time_multi_target` covers array of target timezones
 
-- [ ] T3.2 Port `sequential-thinking`.
+- [x] T3.2 Port `sequential-thinking`.
   - Source: `.opencode/upstream/servers/src/sequentialthinking`
-  - Suggested crate: `crates/sequential-thinking-server`
+  - Crate: `crates/sequential-thinking-server`
   - Required tool: `sequentialthinking`
   - Acceptance:
     - supports revision and branch fields
-    - state is session-scoped
+    - state is session-scoped (Mutex<Vec<ThoughtData>> + Mutex<HashMap<String, Vec<ThoughtData>>>)
     - tests cover thought history and branch behavior
+  - Evidence: 17 tests, 0 clippy, 0 fmt, `--version`/`-V`/`version` all output `0.1.0`, stdio `tools/list` smoke returns `sequentialthinking`.
+    - `test_accept_valid_basic_thought` + `test_track_multiple_thoughts_in_history` verify thought history
+    - `test_branch_tracking` + `test_multiple_thoughts_in_same_branch` verify branch tracking
+    - `test_revision_tracking` verifies revision fields
+    - `test_auto_adjust_total_thoughts` verifies thoughtNumber > totalThoughts adjustment
+    - `test_coerce_bool_true`/`test_coerce_bool_false` verify string "true"/"false" coercion
+    - `test_coerce_positive_i64_accepts_numbers_and_strings` verifies upstream-style number coercion
+    - `test_tool_name` verifies tool name is `sequentialthinking`
+    - `test_no_boolean_json_schema_nodes` verifies no bare boolean in tool input schema
 
 ## T4 Port Filesystem And Git
 

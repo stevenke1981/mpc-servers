@@ -1,0 +1,20 @@
+[package]
+name = "sequential-thinking-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "MCP server providing sequential thinking tool for step-by-step problem-solving (port of @modelcontextprotocol/server-sequential-thinking)."
+
+[[bin]]
+name = "sequential-thinking-server"
+path = "src/main.rs"
+
+[dependencies]
+rmcp.workspace = true
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

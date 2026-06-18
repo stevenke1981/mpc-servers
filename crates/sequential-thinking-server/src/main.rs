@@ -1,11 +1,11 @@
 use rmcp::{transport::stdio, ServiceExt};
-use time_server::TimeServer;
+use sequential_thinking_server::SequentialThinkingServer;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     if std::env::args()
         .skip(1)
-        .any(|arg| arg == "--version" || arg == "-V")
+        .any(|arg| arg == "--version" || arg == "-V" || arg == "version")
     {
         println!("{}", env!("CARGO_PKG_VERSION"));
         return Ok(());
@@ -19,7 +19,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         )
         .init();
 
-    TimeServer.serve(stdio()).await?.waiting().await?;
+    SequentialThinkingServer::new()
+        .serve(stdio())
+        .await?
+        .waiting()
+        .await?;
 
     Ok(())
 }

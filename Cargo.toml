@@ -4,6 +4,7 @@ members = [
     "crates/server-inventory",
     "crates/mcp-servers",
     "crates/time-server",
+    "crates/sequential-thinking-server",
 ]
 
 [workspace.package]
