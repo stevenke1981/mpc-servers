@@ -42,7 +42,16 @@ crates/
   server-inventory/   # 來源、版本、復用策略的 typed inventory
   mcp-servers/        # workspace 管理 CLI
 VERSIONING.md         # 版本號與 release 策略
+spec.md               # 必須保留的來源功能與驗收規格
+plan.md               # 分階段 Rust rewrite 計畫
+todos.md              # 可交給其他代理直接開工的任務清單
 ```
+
+## Planning Docs
+
+- `spec.md`: 定義原本專案的功能保留範圍、tool name、相容性與安全需求。
+- `plan.md`: 分階段導入既有 Rust server 與 port reference servers。
+- `todos.md`: agent-ready 任務清單，包含來源、輸出、驗收命令與不可破壞的功能。
 
 目前 CLI：
 
