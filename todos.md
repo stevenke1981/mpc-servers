@@ -165,7 +165,7 @@
       `cargo run -p filesystem-server -- version` → `0.1.0`
     - Stdio smoke: initialize + `tools/list` returns 0 tools as expected for T4.1
 
-- [ ] T4.2 Port `filesystem` tools.
+- [~] T4.2 Port `filesystem` tools.
   - Depends on: T4.1
   - Required tools: all filesystem tools listed in `spec.md`
   - Acceptance:
@@ -173,6 +173,20 @@
     - `edit_file` supports dry-run diff
     - `read_file` remains deprecated alias
     - Roots behavior documented and tested
+  - Evidence:
+    - Implemented tools: `read_file`, `read_text_file`, `read_media_file`, `read_multiple_files`,
+      `write_file`, `edit_file`, `create_directory`, `list_directory`, `list_directory_with_sizes`,
+      `directory_tree`, `move_file`, `search_files`, `get_file_info`, `list_allowed_directories`
+    - Tool annotations set read-only/write/destructive/idempotent hints for filesystem operations.
+    - Path operations call `AllowedDirectories` validation before filesystem access.
+    - `edit_file` supports `dryRun` and returns a git-style diff.
+    - Unit coverage: 73 filesystem-server tests, including tool inventory, deprecated `read_file`,
+      dry-run edit, file moves, directory tree, search, media read, and schema boolean-node guard.
+    - Stdio smoke: initialize + `tools/list` returns 14 tools; `read_text_file` call succeeds.
+    - Verify: `cargo fmt --check` pass, `cargo test --all-targets` pass,
+      `cargo clippy --all-targets -- -D warnings` pass,
+      `cargo run -p filesystem-server -- --version`/`-V`/`version` → `0.1.0`.
+  - Remaining before `[x]`: implement and test MCP Roots dynamic updates.
 
 - [ ] T4.3 Port `git`.
   - Source: `.opencode/upstream/servers/src/git`

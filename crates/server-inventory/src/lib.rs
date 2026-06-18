@@ -69,7 +69,7 @@ pub const SERVER_TARGETS: &[ServerTarget] = &[
         upstream_version: Some("0.6.3"),
         local_version: Some("0.1.0"),
         decision: ReuseDecision::PortFromReference,
-        notes: "Path safety core is implemented in crates/filesystem-server; file operation tools, roots support, and structured content tests are pending.",
+        notes: "Filesystem tools are implemented in crates/filesystem-server; MCP Roots dynamic updates and broader structured-content parity remain pending.",
     },
     ServerTarget {
         name: "git",

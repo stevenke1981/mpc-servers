@@ -75,9 +75,10 @@ impl AllowedDirectories {
 
     /// Validate a path that **already exists** on disk.
     ///
-    /// The path is canonicalised (symlinks resolved) and checked against
-    /// every allowed directory via component comparison.
-    pub fn validate_existing_path(&self, path: &Path) -> Result<(), String> {
+    /// Returns the canonical (symlink‑resolved) path on success.
+    /// The path is canonicalised and checked against every allowed
+    /// directory via component comparison.
+    pub fn validate_existing_path(&self, path: &Path) -> Result<PathBuf, String> {
         if self.dirs.is_empty() {
             return Err("No allowed directories configured".to_string());
         }
@@ -89,7 +90,7 @@ impl AllowedDirectories {
             .map_err(|e| format!("Cannot resolve path '{}': {}", path.display(), e))?;
 
         if is_path_within_allowed(&canonical, &self.dirs) {
-            Ok(())
+            Ok(canonical)
         } else {
             Err(format!(
                 "Path '{}' is not within any allowed directory",
@@ -99,6 +100,9 @@ impl AllowedDirectories {
     }
 
     /// Validate a **candidate** path that may not exist yet.
+    ///
+    /// Returns the resolved (canonical ancestor + remaining components)
+    /// path on success.
     ///
     /// Algorithm:
     /// 1. Normalise (resolve `.` / `..` without touching disk).
@@ -110,7 +114,7 @@ impl AllowedDirectories {
     /// This reveals symlink‑based escapes: if the deepest existing ancestor
     /// is a symlink that resolves *outside* an allowed directory, the
     /// candidate is rejected.
-    pub fn validate_candidate_path(&self, path: &Path) -> Result<(), String> {
+    pub fn validate_candidate_path(&self, path: &Path) -> Result<PathBuf, String> {
         if self.dirs.is_empty() {
             return Err("No allowed directories configured".to_string());
         }
@@ -150,12 +154,22 @@ impl AllowedDirectories {
         }
 
         if is_path_within_allowed(&resolved, &self.dirs) {
-            Ok(())
+            Ok(resolved)
         } else {
             Err(format!(
                 "Path '{}' resolves outside allowed directories",
                 path.display()
             ))
+        }
+    }
+
+    /// Convenience: call `validate_existing_path` or `validate_candidate_path`
+    /// based on whether the path exists on disk.
+    pub fn validate_path(&self, path: &Path) -> Result<PathBuf, String> {
+        if path.exists() {
+            self.validate_existing_path(path)
+        } else {
+            self.validate_candidate_path(path)
         }
     }
 

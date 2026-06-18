@@ -19,7 +19,7 @@
 | Server | 原始語言 | 上游版本 | Rust 策略 |
 |---|---:|---:|---|
 | `memory` | TypeScript | `0.6.3` | 直接以 `memlong` 作為 Rust 線 |
-| `filesystem` | TypeScript | `0.6.3` | path safety core 已 port：`crates/filesystem-server`；工具待補 |
+| `filesystem` | TypeScript | `0.6.3` | tools 已 port：`crates/filesystem-server`；MCP Roots 動態更新待補 |
 | `git` | Python | `0.6.2` | 需要 Rust port |
 | `time` | Python | `0.6.2` | 已 port：`crates/time-server` |
 | `fetch` | Python | `0.6.3` | 需要 Rust port，先定安全策略 |
@@ -75,7 +75,7 @@ cargo run -p mcp-servers -- --version
 2. 將 `memlong` 作為 `memory` server 線導入，並評估 `rmcp` 版本對齊。
 3. `time` 已 port，可用它驗證 workspace crate、README、installer、release checklist。
 4. `sequential-thinking` 已 port，可用它驗證 stateful tool 模式。
-5. port `filesystem` tools 和 `git`，這兩個需要較完整的安全邊界與 Windows path/process 測試。
+5. 補 `filesystem` MCP Roots 動態更新，然後 port `git`；這兩個需要較完整的安全邊界與 Windows path/process 測試。
 6. port `fetch`，先補 HTTP allowlist、redirect、content-size、SSRF 防護策略。
 7. 用 `everything` 建立 MCP feature compatibility testbed。
 
