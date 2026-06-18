@@ -1,0 +1,24 @@
+[package]
+name = "time-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "MCP server providing time and timezone conversion tools (port of mcp-server-time)."
+
+[[bin]]
+name = "time-server"
+path = "src/main.rs"
+
+[dependencies]
+rmcp.workspace = true
+chrono.workspace = true
+chrono-tz.workspace = true
+tokio.workspace = true
+clap.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+schemars.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true

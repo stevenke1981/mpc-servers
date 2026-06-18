@@ -98,15 +98,20 @@
 
 ## T3 Port Small Reference Servers
 
-- [ ] T3.1 Port `time`.
+- [x] T3.1 Port `time`.
   - Source: `.opencode/upstream/servers/src/time`
-  - Suggested crate: `crates/time-server`
+  - Crate: `crates/time-server`
   - Required tools: `get_current_time`, `convert_time`
   - Acceptance:
     - IANA timezone names work
     - invalid timezone returns invalid params style MCP error
     - output includes timezone, datetime, day_of_week, is_dst
     - tests cover DST and multiple target timezones
+  - Evidence: commit `39499f2` — 16/16 tests, 0 clippy, 0 fmt.
+    - `test_get_current_time_valid_tz` + `test_convert_time_basic` verify IANA names
+    - `test_get_current_time_invalid_timezone` verifies invalid param error
+    - `test_convert_time_nepal_fractional` covers DST
+    - `test_convert_time_multi_target` covers array of target timezones
 
 - [ ] T3.2 Port `sequential-thinking`.
   - Source: `.opencode/upstream/servers/src/sequentialthinking`
