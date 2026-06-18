@@ -107,7 +107,7 @@
     - invalid timezone returns invalid params style MCP error
     - output includes timezone, datetime, day_of_week, is_dst
     - tests cover DST and multiple target timezones
-  - Evidence: commit `39499f2` — 16/16 tests, 0 clippy, 0 fmt.
+  - Evidence: commit `5341c99` — 16/16 tests, 0 clippy, 0 fmt.
     - `test_get_current_time_valid_tz` + `test_convert_time_basic` verify IANA names
     - `test_get_current_time_invalid_timezone` verifies invalid param error
     - `test_convert_time_nepal_fractional` covers DST
