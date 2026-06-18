@@ -30,6 +30,7 @@ schemars = "0.8"
 base64 = "0.22"
 similar = "2"
 globset = "0.4"
+url = "2"
 
 [profile.release]
 lto = true

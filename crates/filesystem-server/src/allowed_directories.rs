@@ -8,7 +8,7 @@ use crate::path_validation::{has_null_bytes, is_path_within_allowed, normalize_p
 /// Stores canonical (symlink‑resolved) paths and validates incoming paths
 /// using **component‑based** comparison (not string prefix matching) to
 /// prevent prefix‑sibling attacks.
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct AllowedDirectories {
     dirs: Vec<PathBuf>,
 }

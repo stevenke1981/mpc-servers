@@ -68,8 +68,8 @@ pub const SERVER_TARGETS: &[ServerTarget] = &[
         source_kind: SourceKind::UpstreamReference,
         upstream_version: Some("0.6.3"),
         local_version: Some("0.1.0"),
-        decision: ReuseDecision::PortFromReference,
-        notes: "Filesystem tools are implemented in crates/filesystem-server; MCP Roots dynamic updates and broader structured-content parity remain pending.",
+        decision: ReuseDecision::ImplementedPort,
+        notes: "Implemented in crates/filesystem-server with 14 filesystem tools, path safety, and MCP Roots dynamic updates.",
     },
     ServerTarget {
         name: "git",

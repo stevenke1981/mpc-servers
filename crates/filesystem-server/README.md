@@ -63,7 +63,7 @@ args = ["D:/workspace"]
 
 ## Status
 
-Command-line allowed directories are implemented. MCP Roots dynamic updates are not implemented yet; until that is done, start the server with explicit allowed directory arguments.
+Command-line allowed directories and MCP Roots dynamic updates are implemented. If a client advertises Roots support, the server requests `roots/list` after `notifications/initialized` and again after `notifications/roots/list_changed`; valid client roots replace the current allowed directories. If the client returns no accessible roots, the server keeps the previous allowed directories.
 
 ## Verification
 

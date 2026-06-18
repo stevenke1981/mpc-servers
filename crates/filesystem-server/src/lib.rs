@@ -3,18 +3,18 @@ mod path_validation;
 
 pub use allowed_directories::AllowedDirectories;
 
-use std::path::Path;
-use std::sync::Arc;
+use std::path::{Path, PathBuf};
+use std::sync::{Arc, RwLock};
 
 use globset::{GlobBuilder, GlobMatcher};
 use rmcp::{
     handler::server::ServerHandler,
     model::{
         CallToolRequestParams, CallToolResult, Content, ErrorCode, Implementation, JsonObject,
-        ListToolsResult, PaginatedRequestParams, ServerCapabilities, ServerInfo, Tool,
+        ListToolsResult, PaginatedRequestParams, Root, ServerCapabilities, ServerInfo, Tool,
         ToolAnnotations, ToolsCapability,
     },
-    service::{RequestContext, RoleServer},
+    service::{NotificationContext, Peer, RequestContext, RoleServer},
     ErrorData as McpError,
 };
 
@@ -76,6 +76,21 @@ fn text_result(text: impl Into<String>) -> CallToolResult {
 
 fn invalid_path_error(message: String) -> McpError {
     McpError::invalid_params(message, None)
+}
+
+fn root_uri_to_path(root: &Root) -> Result<PathBuf, String> {
+    let raw_path = PathBuf::from(&root.uri);
+    if raw_path.has_root() {
+        return Ok(raw_path);
+    }
+
+    match url::Url::parse(&root.uri) {
+        Ok(url) if url.scheme() == "file" => url
+            .to_file_path()
+            .map_err(|_| format!("Root URI is not a valid file path: {}", root.uri)),
+        Ok(url) => Err(format!("Unsupported root URI scheme '{}'", url.scheme())),
+        Err(_) => Ok(PathBuf::from(&root.uri)),
+    }
 }
 
 fn read_only() -> ToolAnnotations {
@@ -1295,16 +1310,81 @@ fn list_allowed_directories_impl(allowed: &AllowedDirectories) -> CallToolResult
 
 #[derive(Debug)]
 pub struct FilesystemServer {
-    allowed: AllowedDirectories,
+    allowed: Arc<RwLock<AllowedDirectories>>,
 }
 
 impl FilesystemServer {
     pub fn new(allowed: AllowedDirectories) -> Self {
-        Self { allowed }
+        Self {
+            allowed: Arc::new(RwLock::new(allowed)),
+        }
     }
 
     pub fn get_tools(&self) -> Vec<Tool> {
         Self::all_tools()
+    }
+
+    fn allowed_snapshot(&self) -> Result<AllowedDirectories, McpError> {
+        self.allowed
+            .read()
+            .map(|guard| guard.clone())
+            .map_err(|_| McpError::internal_error("Allowed directory state is poisoned", None))
+    }
+
+    async fn refresh_roots_from_peer(
+        allowed_state: Arc<RwLock<AllowedDirectories>>,
+        peer: Peer<RoleServer>,
+    ) {
+        let Some(peer_info) = peer.peer_info() else {
+            tracing::debug!("skipping MCP roots refresh: peer info is not available");
+            return;
+        };
+        if peer_info.capabilities.roots.is_none() {
+            tracing::debug!(
+                "skipping MCP roots refresh: client did not advertise roots capability"
+            );
+            return;
+        }
+
+        tracing::debug!("requesting MCP roots from client");
+        match peer.list_roots().await {
+            Ok(result) if result.roots.is_empty() => {
+                tracing::warn!(
+                    "client returned an empty MCP roots list; keeping existing allowed directories"
+                );
+            }
+            Ok(result) => {
+                let mut paths = Vec::with_capacity(result.roots.len());
+                for root in &result.roots {
+                    match root_uri_to_path(root) {
+                        Ok(path) => paths.push(path),
+                        Err(error) => tracing::warn!("{error}"),
+                    }
+                }
+
+                match AllowedDirectories::from_existing_dirs(&paths) {
+                    Ok(allowed) => match allowed_state.write() {
+                        Ok(mut guard) => {
+                            *guard = allowed;
+                            tracing::info!("updated filesystem allowed directories from MCP roots");
+                        }
+                        Err(_) => {
+                            tracing::error!(
+                                "failed to update allowed directories: state is poisoned"
+                            );
+                        }
+                    },
+                    Err(error) => {
+                        tracing::warn!(
+                            "client roots did not contain accessible directories: {error}"
+                        );
+                    }
+                }
+            }
+            Err(error) => {
+                tracing::warn!("failed to refresh MCP roots: {error}");
+            }
+        }
     }
 
     fn all_tools() -> Vec<Tool> {
@@ -1359,12 +1439,31 @@ impl ServerHandler for FilesystemServer {
         Ok(ListToolsResult::with_all_items(Self::all_tools()))
     }
 
+    async fn on_initialized(&self, context: NotificationContext<RoleServer>) {
+        tracing::debug!("client initialized; scheduling MCP roots refresh");
+        let allowed_state = Arc::clone(&self.allowed);
+        let peer = context.peer.clone();
+        tokio::spawn(async move {
+            FilesystemServer::refresh_roots_from_peer(allowed_state, peer).await;
+        });
+    }
+
+    async fn on_roots_list_changed(&self, context: NotificationContext<RoleServer>) {
+        tracing::debug!("client roots changed; scheduling MCP roots refresh");
+        let allowed_state = Arc::clone(&self.allowed);
+        let peer = context.peer.clone();
+        tokio::spawn(async move {
+            FilesystemServer::refresh_roots_from_peer(allowed_state, peer).await;
+        });
+    }
+
     async fn call_tool(
         &self,
         request: CallToolRequestParams,
         _context: RequestContext<RoleServer>,
     ) -> Result<CallToolResult, McpError> {
         let args = request.arguments.as_ref();
+        let allowed = self.allowed_snapshot()?;
 
         match request.name.as_ref() {
             "read_file" | "read_text_file" => {
@@ -1380,7 +1479,7 @@ impl ServerHandler for FilesystemServer {
                     .and_then(|v| v.as_u64())
                     .map(|n| n as usize);
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 read_text_file_impl(&valid_path, tail, head).await
@@ -1391,7 +1490,7 @@ impl ServerHandler for FilesystemServer {
                     args.ok_or_else(|| McpError::invalid_params("Missing arguments", None))?;
                 let path_str = extract_string(args, "path")?;
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 read_media_file_impl(&valid_path).await
@@ -1417,7 +1516,7 @@ impl ServerHandler for FilesystemServer {
                         None,
                     ));
                 }
-                read_multiple_files_impl(&paths, &self.allowed).await
+                read_multiple_files_impl(&paths, &allowed).await
             }
 
             "write_file" => {
@@ -1426,7 +1525,7 @@ impl ServerHandler for FilesystemServer {
                 let path_str = extract_string(args, "path")?;
                 let content = extract_string(args, "content")?;
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_candidate_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 write_file_impl(&valid_path, content).await
@@ -1451,7 +1550,7 @@ impl ServerHandler for FilesystemServer {
                     ));
                 }
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 edit_file_impl(&valid_path, &edits, dry_run).await
@@ -1462,7 +1561,7 @@ impl ServerHandler for FilesystemServer {
                     args.ok_or_else(|| McpError::invalid_params("Missing arguments", None))?;
                 let path_str = extract_string(args, "path")?;
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_candidate_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 create_directory_impl(&valid_path).await
@@ -1473,7 +1572,7 @@ impl ServerHandler for FilesystemServer {
                     args.ok_or_else(|| McpError::invalid_params("Missing arguments", None))?;
                 let path_str = extract_string(args, "path")?;
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 list_directory_impl(&valid_path).await
@@ -1488,7 +1587,7 @@ impl ServerHandler for FilesystemServer {
                     .and_then(|v| v.as_str())
                     .unwrap_or("name");
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 list_directory_with_sizes_impl(&valid_path, sort_by).await
@@ -1500,10 +1599,10 @@ impl ServerHandler for FilesystemServer {
                 let path_str = extract_string(args, "path")?;
                 let exclude_patterns = extract_string_array(args, "excludePatterns");
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
-                directory_tree_impl(&valid_path, &exclude_patterns, &self.allowed).await
+                directory_tree_impl(&valid_path, &exclude_patterns, &allowed).await
             }
 
             "move_file" => {
@@ -1512,11 +1611,11 @@ impl ServerHandler for FilesystemServer {
                 let source = extract_string(args, "source")?;
                 let destination = extract_string(args, "destination")?;
                 let valid_source = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(source))
                     .map_err(invalid_path_error)?;
                 let valid_dest = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_candidate_path(Path::new(destination))
                     .map_err(invalid_path_error)?;
                 move_file_impl(&valid_source, &valid_dest).await
@@ -1529,10 +1628,10 @@ impl ServerHandler for FilesystemServer {
                 let pattern = extract_string(args, "pattern")?;
                 let exclude_patterns = extract_string_array(args, "excludePatterns");
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_existing_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
-                search_files_impl(&valid_path, pattern, &exclude_patterns, &self.allowed).await
+                search_files_impl(&valid_path, pattern, &exclude_patterns, &allowed).await
             }
 
             "get_file_info" => {
@@ -1540,13 +1639,13 @@ impl ServerHandler for FilesystemServer {
                     args.ok_or_else(|| McpError::invalid_params("Missing arguments", None))?;
                 let path_str = extract_string(args, "path")?;
                 let valid_path = self
-                    .allowed
+                    .allowed_snapshot()?
                     .validate_path(Path::new(path_str))
                     .map_err(invalid_path_error)?;
                 get_file_info_impl(&valid_path).await
             }
 
-            "list_allowed_directories" => Ok(list_allowed_directories_impl(&self.allowed)),
+            "list_allowed_directories" => Ok(list_allowed_directories_impl(&allowed)),
 
             _ => Err(McpError::new(
                 ErrorCode::METHOD_NOT_FOUND,
@@ -1655,6 +1754,30 @@ mod tests {
     fn test_tool_name_read_file_deprecated() {
         let tool = build_read_text_file_tool("read_file", "deprecated");
         assert_eq!(tool.name.as_ref(), "read_file");
+    }
+
+    #[test]
+    fn test_root_uri_to_path_accepts_file_uri() {
+        let td = TestDir::new();
+        let uri = url::Url::from_directory_path(&td.path).unwrap().to_string();
+        let root = Root::new(uri);
+
+        assert_eq!(root_uri_to_path(&root).unwrap(), td.path);
+    }
+
+    #[test]
+    fn test_root_uri_to_path_accepts_plain_path() {
+        let td = TestDir::new();
+        let root = Root::new(td.path.to_string_lossy().to_string());
+
+        assert_eq!(root_uri_to_path(&root).unwrap(), td.path);
+    }
+
+    #[test]
+    fn test_root_uri_to_path_rejects_non_file_uri() {
+        let root = Root::new("https://example.com/workspace");
+
+        assert!(root_uri_to_path(&root).is_err());
     }
 
     #[test]

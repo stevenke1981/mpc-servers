@@ -21,3 +21,4 @@ tracing-subscriber.workspace = true
 base64.workspace = true
 similar.workspace = true
 globset.workspace = true
+url.workspace = true
