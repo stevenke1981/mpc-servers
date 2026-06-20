@@ -1,0 +1,48 @@
+{
+  "schema_version": "0.1",
+  "name": "cbm",
+  "display_name": "cbm",
+  "version": "0.2.3",
+  "transport": "stdio",
+  "command": "cbm",
+  "args": [],
+  "env": {
+    "CBM_PROJECT_PREFIX": "cbm+",
+    "CBM_AGENT": "generic"
+  },
+  "capabilities": {
+    "tools": true,
+    "resources": false,
+    "prompts": false
+  },
+  "tools": [
+    "index_repository",
+    "index_status",
+    "search_graph",
+    "trace_path",
+    "get_code_snippet",
+    "get_graph_schema",
+    "get_architecture",
+    "query_graph",
+    "search_code",
+    "list_projects",
+    "delete_project",
+    "detect_changes",
+    "manage_adr",
+    "ingest_traces"
+  ],
+  "install": {
+    "recommended_command": "./install.ps1",
+    "windows_installer_url": "https://raw.githubusercontent.com/stevenke1981/cbm-mcp/main/packaging/windows/install.ps1",
+    "linux_installer_url": "https://raw.githubusercontent.com/stevenke1981/cbm-mcp/main/packaging/linux/install.sh",
+    "macos_installer_url": "https://raw.githubusercontent.com/stevenke1981/cbm-mcp/main/packaging/macos/install.sh",
+    "windows_binary": "%USERPROFILE%\\.config\\cbm-mcp\\bin\\cbm.exe",
+    "unix_binary": "~/.config/cbm-mcp/bin/cbm",
+    "manual_templates": [
+      "packaging/mcp/generic-mcp.json",
+      "packaging/mcp/codex-config.toml",
+      "packaging/mcp/opencode.json",
+      "packaging/mcp/claude-settings.json"
+    ]
+  }
+}

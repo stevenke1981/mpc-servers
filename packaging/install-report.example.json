@@ -1,0 +1,58 @@
+[
+  {
+    "server_name": "cbm",
+    "version": "cbm 0.2.3",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\cbm.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "git",
+    "version": "0.1.0",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\git-server.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "fetch",
+    "version": "0.1.0",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\fetch-server.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "everything",
+    "version": "0.1.0",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\everything-server.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "memory",
+    "version": "opencode-memory v0.1.0",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\memory-mcp-server.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "rlm",
+    "version": "rlm-mcp 0.1.6",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\rlm-mcp.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  },
+  {
+    "server_name": "nushell",
+    "version": "nushell-mcp 0.1.0",
+    "installed_exe": "C:\\Users\\you\\.config\\mpc-servers\\bin\\nushell-mcp.exe",
+    "config_targets": ["codex", "opencode", "claude"],
+    "changed": true,
+    "warnings": []
+  }
+]

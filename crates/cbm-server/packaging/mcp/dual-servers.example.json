@@ -1,0 +1,23 @@
+{
+  "mcp": {
+    "cbm": {
+      "type": "local",
+      "command": ["{{CBM_BINARY}}"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {
+        "CBM_PROJECT_PREFIX": "cbm+",
+        "CBM_AGENT": "opencode"
+      }
+    },
+    "rlm-mcp": {
+      "type": "local",
+      "command": ["{{RLM_BINARY}}"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {
+        "RLM_CACHE_DIR": ""
+      }
+    }
+  }
+}

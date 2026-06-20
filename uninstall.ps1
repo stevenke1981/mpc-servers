@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("all", "filesystem", "time", "sequential-thinking")]
+    [ValidateSet("all", "cbm", "everything", "filesystem", "fetch", "git", "memory", "nushell", "rlm", "time", "sequential-thinking")]
     [string[]]$Server = @("all"),
     [string]$InstallDir = $(Join-Path $HOME ".config\mpc-servers\bin"),
     [switch]$Json
@@ -8,7 +8,14 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ServerMap = @{
+    "cbm" = "cbm.exe"
+    "everything" = "everything-server.exe"
     "filesystem" = "filesystem-server.exe"
+    "fetch" = "fetch-server.exe"
+    "git" = "git-server.exe"
+    "memory" = "memory-mcp-server.exe"
+    "nushell" = "nushell-mcp.exe"
+    "rlm" = "rlm-mcp.exe"
     "time" = "time-server.exe"
     "sequential-thinking" = "sequential-thinking-server.exe"
 }
@@ -16,7 +23,7 @@ $ServerMap = @{
 function Resolve-Servers {
     param([string[]]$Names)
     if ($Names -contains "all") {
-        return @("filesystem", "time", "sequential-thinking")
+        return @("cbm", "everything", "filesystem", "fetch", "git", "memory", "nushell", "rlm", "time", "sequential-thinking")
     }
     return $Names
 }

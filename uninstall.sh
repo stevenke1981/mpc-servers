@@ -8,7 +8,7 @@ SERVERS=("all")
 usage() {
   cat <<'USAGE'
 Usage:
-  ./uninstall.sh [--server all|filesystem|time|sequential-thinking] [--install-dir DIR] [--json]
+  ./uninstall.sh [--server all|cbm|everything|filesystem|fetch|git|memory|nushell|rlm|time|sequential-thinking] [--install-dir DIR] [--json]
 
 Options:
   --server       Server to uninstall. Can be repeated. Default: all
@@ -47,7 +47,14 @@ done
 
 server_binary() {
   case "$1" in
+    cbm) echo "cbm" ;;
+    everything) echo "everything-server" ;;
     filesystem) echo "filesystem-server" ;;
+    fetch) echo "fetch-server" ;;
+    git) echo "git-server" ;;
+    memory) echo "memory-mcp-server" ;;
+    nushell) echo "nushell-mcp" ;;
+    rlm) echo "rlm-mcp" ;;
     time) echo "time-server" ;;
     sequential-thinking) echo "sequential-thinking-server" ;;
     *) echo "Unknown server: $1" >&2; exit 1 ;;
@@ -57,7 +64,7 @@ server_binary() {
 resolve_servers() {
   for server in "${SERVERS[@]}"; do
     if [[ "$server" == "all" ]]; then
-      printf '%s\n' filesystem time sequential-thinking
+      printf '%s\n' cbm everything filesystem fetch git memory nushell rlm time sequential-thinking
       return
     fi
   done

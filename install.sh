@@ -13,7 +13,7 @@ SERVERS=("all")
 usage() {
   cat <<'USAGE'
 Usage:
-  ./install.sh [--server all|filesystem|time|sequential-thinking] [--version latest|vX.Y.Z]
+  ./install.sh [--server all|cbm|everything|filesystem|fetch|git|memory|nushell|rlm|time|sequential-thinking] [--version latest|vX.Y.Z]
   ./install.sh --from-source [--server all] [--skip-build] [--json]
 
 Options:
@@ -68,7 +68,30 @@ done
 
 server_package() {
   case "$1" in
+    cbm) echo "codebase-memory-mcp" ;;
+    everything) echo "everything-server" ;;
     filesystem) echo "filesystem-server" ;;
+    fetch) echo "fetch-server" ;;
+    git) echo "git-server" ;;
+    memory) echo "memory-mcp-server" ;;
+    nushell) echo "nushell-mcp" ;;
+    rlm) echo "rlm-mcp" ;;
+    time) echo "time-server" ;;
+    sequential-thinking) echo "sequential-thinking-server" ;;
+    *) echo "Unknown server: $1" >&2; exit 1 ;;
+  esac
+}
+
+server_binary() {
+  case "$1" in
+    cbm) echo "cbm" ;;
+    everything) echo "everything-server" ;;
+    filesystem) echo "filesystem-server" ;;
+    fetch) echo "fetch-server" ;;
+    git) echo "git-server" ;;
+    memory) echo "memory-mcp-server" ;;
+    nushell) echo "nushell-mcp" ;;
+    rlm) echo "rlm-mcp" ;;
     time) echo "time-server" ;;
     sequential-thinking) echo "sequential-thinking-server" ;;
     *) echo "Unknown server: $1" >&2; exit 1 ;;
@@ -78,7 +101,7 @@ server_package() {
 resolve_servers() {
   for server in "${SERVERS[@]}"; do
     if [[ "$server" == "all" ]]; then
-      printf '%s\n' filesystem time sequential-thinking
+      printf '%s\n' cbm everything filesystem fetch git memory nushell rlm time sequential-thinking
       return
     fi
   done
@@ -147,7 +170,7 @@ fi
 reports=()
 while IFS= read -r server; do
   package="$(server_package "$server")"
-  binary="$package"
+  binary="$(server_binary "$server")"
 
   if [[ "$FROM_SOURCE" -eq 1 ]]; then
     if [[ "$SKIP_BUILD" -eq 0 ]]; then

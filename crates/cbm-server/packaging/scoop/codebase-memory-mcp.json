@@ -1,0 +1,24 @@
+{
+    "version": "0.2.3",
+    "description": "Rust codebase knowledge graph MCP server for AI coding agents",
+    "homepage": "https://github.com/stevenke1981/cbm-mcp",
+    "license": "MIT",
+    "architecture": {
+        "64bit": {
+            "url": "https://github.com/stevenke1981/cbm-mcp/releases/download/v0.2.3/cbm-mcp-windows-x64.zip",
+            "hash": "sha256:UPDATE_FROM_RELEASE_SHA256SUMS"
+        }
+    },
+    "bin": "cbm.exe",
+    "checkver": {
+        "github": "https://github.com/stevenke1981/cbm-mcp"
+    },
+    "autoupdate": {
+        "architecture": {
+            "64bit": {
+                "url": "https://github.com/stevenke1981/cbm-mcp/releases/download/v$version/cbm-mcp-windows-x64.zip"
+            }
+        }
+    },
+    "notes": "Run 'cbm install --yes --all' after install to configure MCP agents. Linux/macOS: see packaging/linux/install.sh and packaging/macos/install.sh"
+}

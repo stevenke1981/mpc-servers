@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "rlm-mcp": {
+      "command": "{{RLM_BINARY}}",
+      "args": [],
+      "env": {}
+    }
+  }
+}

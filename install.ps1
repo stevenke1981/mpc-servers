@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("all", "filesystem", "time", "sequential-thinking")]
+    [ValidateSet("all", "cbm", "everything", "filesystem", "fetch", "git", "memory", "nushell", "rlm", "time", "sequential-thinking")]
     [string[]]$Server = @("all"),
     [string]$Version = $(if ($env:MPC_SERVERS_VERSION) { $env:MPC_SERVERS_VERSION } else { "latest" }),
     [string]$InstallDir = $(Join-Path $HOME ".config\mpc-servers\bin"),
@@ -15,7 +15,14 @@ $InstallRoot = (Resolve-Path -LiteralPath (New-Item -ItemType Directory -Force -
 $ScriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 $ServerMap = @{
+    "cbm" = @{ Package = "codebase-memory-mcp"; Binary = "cbm.exe" }
+    "everything" = @{ Package = "everything-server"; Binary = "everything-server.exe" }
     "filesystem" = @{ Package = "filesystem-server"; Binary = "filesystem-server.exe" }
+    "fetch" = @{ Package = "fetch-server"; Binary = "fetch-server.exe" }
+    "git" = @{ Package = "git-server"; Binary = "git-server.exe" }
+    "memory" = @{ Package = "memory-mcp-server"; Binary = "memory-mcp-server.exe" }
+    "nushell" = @{ Package = "nushell-mcp"; Binary = "nushell-mcp.exe" }
+    "rlm" = @{ Package = "rlm-mcp"; Binary = "rlm-mcp.exe" }
     "time" = @{ Package = "time-server"; Binary = "time-server.exe" }
     "sequential-thinking" = @{ Package = "sequential-thinking-server"; Binary = "sequential-thinking-server.exe" }
 }
@@ -23,7 +30,7 @@ $ServerMap = @{
 function Resolve-Servers {
     param([string[]]$Names)
     if ($Names -contains "all") {
-        return @("filesystem", "time", "sequential-thinking")
+        return @("cbm", "everything", "filesystem", "fetch", "git", "memory", "nushell", "rlm", "time", "sequential-thinking")
     }
     return $Names
 }

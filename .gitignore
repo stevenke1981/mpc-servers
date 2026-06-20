@@ -1,6 +1,7 @@
 target/
 dist/
 *.log
+!crates/rlm-server/examples/fixtures/**/*.log
 
 .opencode/
 .codebase-memory/

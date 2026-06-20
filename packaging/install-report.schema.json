@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/stevenke1981/mpc-servers/packaging/install-report.schema.json",
+  "title": "mpc-servers install report",
+  "description": "Machine-readable report emitted by install.ps1 -Json and install.sh --json.",
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "server_name",
+      "version",
+      "installed_exe",
+      "config_targets",
+      "changed",
+      "warnings"
+    ],
+    "properties": {
+      "server_name": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Logical server name accepted by the installer, such as filesystem, git, time, or sequential-thinking."
+      },
+      "version": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Version reported by the installed binary --version command."
+      },
+      "installed_exe": {
+        "type": "string",
+        "minLength": 1,
+        "description": "Actual executable path copied or selected by the installer. Agent config must use this path."
+      },
+      "config_targets": {
+        "type": "array",
+        "items": {
+          "type": "string",
+          "enum": ["codex", "opencode", "claude"]
+        },
+        "minItems": 1,
+        "uniqueItems": true
+      },
+      "changed": {
+        "type": "boolean",
+        "description": "Whether the installer changed the filesystem for this server."
+      },
+      "warnings": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        },
+        "description": "Non-fatal warnings, such as Windows locked binary side-by-side fallback."
+      }
+    }
+  }
+}
+

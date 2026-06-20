@@ -1,0 +1,20 @@
+/target/
+*.pdb
+*.log
+.env
+.env.*
+!.env.example
+
+# Local agent/index state
+.codebase-memory/
+.opencode/memory.db*
+.opencode/vectors.usearch
+.opencode/tantivy/
+
+# Template artifact (literal variable name, not expanded)
+/${PROJECT_ROOT}/
+
+# Keep human-authored OpenCode plans.
+!.opencode/
+!.opencode/plans/
+!.opencode/plans/*.md

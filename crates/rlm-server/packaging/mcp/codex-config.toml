@@ -1,0 +1,3 @@
+[mcp_servers.rlm-mcp]
+command = "{{RLM_BINARY}}"
+args = []

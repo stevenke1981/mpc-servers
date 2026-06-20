@@ -71,6 +71,14 @@
 - 搜尋必須保留 semantic、BM25、temporal 權重能力。
 - 若不直接實作 reference graph tools，必須提供 bridge/compat crate 或 README 明確描述 replacement mapping。
 
+目前 Rust 實作：
+
+- 已以 source vendor import 導入 `crates/memory-core`、`crates/memory-server` 與 `crates/memory-cli`。
+- Package name 與 binary name 保留 `memory-mcp-server`。
+- MCP server 已升級到 workspace `rmcp` 版本，保留 7 個公開 memlong tools。
+- TypeScript reference graph tools 尚未實作；README 與 `docs/parity/memory.md` 明確標記為 memlong replacement semantics，後續若需要 graph-tool parity 再補 compatibility bridge。
+- 原 package 測試、memory core lifecycle tests、release binary MCP SDK smoke 已在 workspace 內通過。
+
 ### `filesystem`
 
 來源：`stevenke1981/servers/src/filesystem`，TypeScript package `@modelcontextprotocol/server-filesystem@0.6.3`
@@ -125,6 +133,12 @@
 - destructive 行為，例如 reset、checkout、commit，必須在 schema annotation 中反映風險。
 - Windows 上要保留原生 process argument passing。
 
+目前 Rust 實作：
+
+- `crates/git-server` 已保留全部 12 個 tool。
+- `--repository` / `-r` 可限制允許的 repository 邊界。
+- 所有 Git 呼叫使用 native process args，並測試 flag injection 與 path traversal 防護。
+
 ### `time`
 
 來源：`stevenke1981/servers/src/time`，Python package `mcp-server-time@0.6.2`
@@ -155,6 +169,16 @@
 - 必須設定 request timeout、max response bytes、redirect 限制。
 - 必須先定義 SSRF 防護策略，例如禁止 localhost/private IP，或預設 deny 並允許顯式 allowlist。
 - User-Agent 與 proxy 行為要在 README 中說明。
+
+目前安全策略：見 `docs/fetch-security.md`。預設 public-web only，禁止
+localhost/private/link-local/multicast 等位址；private network 需以
+`--allow-private-network` 明確啟用。
+
+目前 Rust 實作：
+
+- `crates/fetch-server` 已實作 `fetch` tool。
+- 支援 `max_length`、`start_index`、`raw`。
+- 手動限制 redirects、timeout、max response bytes，並測試 localhost 預設封鎖。
 
 ### `sequential-thinking`
 
@@ -187,6 +211,15 @@
 - Logging
 - Sampling
 - Elicitation
+
+目前 Rust 實作：
+
+- 已新增 `crates/everything-server`，binary name `everything-server`。
+- stdio MCP server、`--version`、`-V`、`version` 已支援。
+- `tools/list` 目前回傳 19 個 upstream tool names，且 TypeScript MCP SDK smoke 已驗證沒有 boolean JSON Schema nodes。
+- 已實作本地可驗證 core tool 行為：`echo`、`get-sum`、`get-structured-content`、`get-env`、`get-tiny-image`、resource links/reference、`gzip-file-as-resource` 真 gzip 壓縮與 session resource 建立。
+- 已註冊 4 個 prompts、static resources、dynamic text/blob resource templates、session resources，且 TypeScript MCP SDK prompts/resources smoke 已驗證 list/get/read。
+- roots、subscriptions、logging、sampling 與 progress notifications 已接上 `rmcp` 支援的 protocol path，並對未宣告 capability 的 client 提供 deterministic fallback；`scripts/everything-protocol-smoke.ps1` 會用 TypeScript SDK client 宣告 roots/sampling、訂閱 resource，並驗證 progress/logging/resource update notifications。elicitation 目前明確 deferred。詳見 `docs/parity/everything.md`。
 
 ## 必須保留的既有 Rust 專案功能
 
@@ -230,6 +263,14 @@
 - `rlm_benchmark_run`
 - `rlm_tools_reference`
 
+目前 Rust 實作：
+
+- 已以 source vendor import 導入 `crates/rlm-server`。
+- Package name 與 binary name 保留 `rlm-mcp`。
+- 保留 33 個公開 `rlm_*` MCP tools。
+- `rlm_repl_execute` 仍維持 opt-in safety gate。
+- 原 package 測試已在 workspace 內通過。
+
 ### `cbm-mcp`
 
 來源：`stevenke1981/cbm-mcp.git`，目前版本 `0.2.3`
@@ -250,6 +291,14 @@
 - `detect_changes`
 - `manage_adr`
 - `ingest_traces`
+
+目前 Rust 實作：
+
+- 已以 source vendor import 導入 `crates/cbm-server`。
+- Package name 保留 `codebase-memory-mcp`，binary name 保留 `cbm`。
+- 保留 14 個公開 MCP tools。
+- 保留 `src/mcp/server.rs` 的 `tools/list` schema normalization。
+- 原 package 測試已在 workspace 內通過。
 
 ### `nushell-mcp`
 
@@ -272,6 +321,14 @@
 - `nu_find`
 - `nu_read`
 - `nu_ls`
+
+目前 Rust 實作：
+
+- 已以 source vendor import 導入 `crates/nushell-server`。
+- Package name 與 binary name 保留 `nushell-mcp`。
+- 保留 15 個公開 Nu/Git MCP tools。
+- 保留 bounded timeout、output limit、native argument passing 與 Windows Git output cleanup。
+- 原 package 測試已在 workspace 內通過。
 
 ## 驗收標準
 

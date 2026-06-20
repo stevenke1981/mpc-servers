@@ -1,0 +1,20 @@
+[package]
+name = "git-server"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "MCP server providing Git repository operations (port of mcp-server-git)."
+
+[[bin]]
+name = "git-server"
+path = "src/main.rs"
+
+[dependencies]
+rmcp.workspace = true
+tokio.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+

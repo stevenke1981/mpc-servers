@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "cbm": {
+      "command": "{{CBM_BINARY}}",
+      "args": [],
+      "env": {
+        "CBM_PROJECT_PREFIX": "cbm+",
+        "CBM_AGENT": "generic"
+      }
+    }
+  }
+}

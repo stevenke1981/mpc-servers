@@ -1,0 +1,7 @@
+[mcp_servers.cbm]
+command = "{{CBM_BINARY}}"
+args = []
+
+[mcp_servers.cbm.env]
+CBM_PROJECT_PREFIX = "cbm+"
+CBM_AGENT = "codex"

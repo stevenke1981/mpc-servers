@@ -1,0 +1,46 @@
+{
+  "version": "0.2.3",
+  "repository": "stevenke1981/cbm-mcp",
+  "artifacts": [
+    {
+      "id": "cbm-mcp-windows-x64",
+      "os": "windows",
+      "arch": "x64",
+      "format": "zip",
+      "file": "cbm-mcp-windows-x64.zip",
+      "binary": "cbm.exe"
+    },
+    {
+      "id": "cbm-mcp-linux-x64",
+      "os": "linux",
+      "arch": "x64",
+      "format": "tar.gz",
+      "file": "cbm-mcp-linux-x64.tar.gz",
+      "binary": "cbm"
+    },
+    {
+      "id": "cbm-mcp-linux-arm64",
+      "os": "linux",
+      "arch": "arm64",
+      "format": "tar.gz",
+      "file": "cbm-mcp-linux-arm64.tar.gz",
+      "binary": "cbm"
+    },
+    {
+      "id": "cbm-mcp-macos-x64",
+      "os": "macos",
+      "arch": "x64",
+      "format": "tar.gz",
+      "file": "cbm-mcp-macos-x64.tar.gz",
+      "binary": "cbm"
+    },
+    {
+      "id": "cbm-mcp-macos-arm64",
+      "os": "macos",
+      "arch": "arm64",
+      "format": "tar.gz",
+      "file": "cbm-mcp-macos-arm64.tar.gz",
+      "binary": "cbm"
+    }
+  ]
+}

@@ -20,19 +20,31 @@ with Codex, OpenCode, Claude Desktop, and other MCP clients.
 
 | Server | Source language | Upstream version | Rust status |
 |---|---:|---:|---|
-| `memory` | TypeScript | `0.6.3` | Use `memlong` as the Rust line |
+| `memory` | TypeScript | `0.6.3` | Imported from `memlong`: `crates/memory-server` + `crates/memory-core` |
+| `cbm` | Rust | `0.2.3` | Imported: `crates/cbm-server` |
+| `rlm` | Rust | `0.1.6` | Imported: `crates/rlm-server` |
+| `nushell` | Rust | `0.1.0` | Imported: `crates/nushell-server` |
 | `filesystem` | TypeScript | `0.6.3` | Ported: `crates/filesystem-server` |
-| `git` | Python | `0.6.2` | Pending Rust port |
+| `git` | Python | `0.6.2` | Ported: `crates/git-server` |
 | `time` | Python | `0.6.2` | Ported: `crates/time-server` |
-| `fetch` | Python | `0.6.3` | Pending Rust port; security policy first |
+| `fetch` | Python | `0.6.3` | Ported: `crates/fetch-server` |
 | `sequential-thinking` | TypeScript | `0.6.2` | Ported: `crates/sequential-thinking-server` |
-| `everything` | TypeScript | `2.0.0` | Planned MCP protocol feature testbed |
+| `everything` | TypeScript | `2.0.0` | Ported testbed: `crates/everything-server` |
 
 ## Workspace Layout
 
 ```text
 crates/
+  cbm-server/                # Imported codebase-memory MCP server
+  rlm-server/                # Imported RLM MCP server
+  nushell-server/            # Imported Nushell MCP server
+  memory-core/               # Imported memlong storage, retrieval, and consolidation core
+  memory-server/             # Imported memlong MCP server
+  memory-cli/                # Imported memlong debug/maintenance CLI
   filesystem-server/         # Filesystem MCP server with path safety and MCP Roots
+  fetch-server/              # Bounded web fetch MCP server with SSRF protections
+  git-server/                # Git MCP server with repository validation
+  everything-server/         # MCP compatibility testbed for tools/prompts/resources
   sequential-thinking-server/# Stateful sequential thinking MCP server
   time-server/               # Timezone conversion/current time MCP server
   server-inventory/          # Typed source/version/reuse inventory
@@ -43,6 +55,8 @@ VERSIONING.md                # Version and release policy
 spec.md                      # Required parity and safety requirements
 plan.md                      # Implementation plan
 todos.md                     # Agent-ready task list
+docs/templates/              # Copyable README/parity templates for future ports
+.github/workflows/release.yml # GitHub Release asset workflow
 ```
 
 ## Build And Verify
@@ -52,6 +66,8 @@ cargo fmt --check
 cargo test --all-targets
 cargo clippy --all-targets -- -D warnings
 cargo run -p mcp-servers -- inventory
+.\scripts\tools-list-smoke.ps1 -Binary .\target\debug\git-server.exe -ExpectedToolCount 12
+.\scripts\release-check.ps1
 ```
 
 ## Install
@@ -107,14 +123,28 @@ By default, binaries are installed to:
 
 Implemented server names accepted by the installers:
 
+- `cbm`
+- `everything`
 - `filesystem`
+- `fetch`
+- `git`
+- `memory`
+- `nushell`
+- `rlm`
 - `time`
 - `sequential-thinking`
 - `all`
 
 Installed binary names:
 
+- `cbm`
 - `filesystem-server`
+- `fetch-server`
+- `git-server`
+- `everything-server`
+- `memory-mcp-server`
+- `nushell-mcp`
+- `rlm-mcp`
 - `time-server`
 - `sequential-thinking-server`
 
@@ -126,9 +156,38 @@ Use the installed binary path from the install report. Do not point agents at
 Example Codex config:
 
 ```toml
+[mcp_servers.cbm]
+command = "C:/Users/you/.config/mpc-servers/bin/cbm.exe"
+args = []
+
 [mcp_servers.filesystem]
 command = "C:/Users/you/.config/mpc-servers/bin/filesystem-server.exe"
 args = ["D:/workspace"]
+
+[mcp_servers.git]
+command = "C:/Users/you/.config/mpc-servers/bin/git-server.exe"
+args = ["--repository", "D:/workspace/repo"]
+
+[mcp_servers.fetch]
+command = "C:/Users/you/.config/mpc-servers/bin/fetch-server.exe"
+args = []
+
+[mcp_servers.memory]
+command = "C:/Users/you/.config/mpc-servers/bin/memory-mcp-server.exe"
+args = []
+
+[mcp_servers.memory.env]
+LLM_API_BASE = "http://localhost:8080/v1"
+LLM_API_KEY = "local"
+PROJECT_ROOT = "D:/workspace"
+
+[mcp_servers.nushell]
+command = "C:/Users/you/.config/mpc-servers/bin/nushell-mcp.exe"
+args = []
+
+[mcp_servers.rlm]
+command = "C:/Users/you/.config/mpc-servers/bin/rlm-mcp.exe"
+args = []
 
 [mcp_servers.time]
 command = "C:/Users/you/.config/mpc-servers/bin/time-server.exe"
@@ -144,9 +203,55 @@ Example OpenCode config:
 ```json
 {
   "mcp": {
+    "cbm": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\cbm.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
     "filesystem": {
       "type": "local",
       "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\filesystem-server.exe", "D:\\workspace"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "git": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\git-server.exe", "--repository", "D:\\workspace\\repo"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\fetch-server.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "memory": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\memory-mcp-server.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {
+        "LLM_API_BASE": "http://localhost:8080/v1",
+        "LLM_API_KEY": "local",
+        "PROJECT_ROOT": "D:\\workspace"
+      }
+    },
+    "nushell": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\nushell-mcp.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "rlm": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\rlm-mcp.exe"],
       "enabled": true,
       "timeout": 120000,
       "environment": {}
@@ -154,6 +259,31 @@ Example OpenCode config:
   }
 }
 ```
+
+## Memory Configuration And Compatibility
+
+The `memory` server is the imported Rust `memlong` line. It exposes the long-term
+memory tools `add_memory`, `search_memories`, `get_memories`, `delete_memory`,
+`consolidate_memories`, `get_memory_stats`, and `end_session`.
+
+Default data lives under `PROJECT_ROOT/.opencode/`:
+
+- `MEMORY_DB_PATH`: SQLite metadata database
+- `MEMORY_VECTOR_PATH`: USearch vector index
+- `MEMORY_TANTIVY_PATH`: Tantivy BM25 index directory
+
+If those variables are omitted, set `PROJECT_ROOT` to the workspace whose memory
+should be isolated. Set `LLM_API_BASE`, `LLM_API_KEY`, `EXTRACTION_MODEL`,
+`EMBEDDING_MODEL`, and `EMBEDDING_DIM` to match the local or hosted
+OpenAI-compatible endpoint.
+
+Compatibility note: the TypeScript reference `memory` server exposes knowledge
+graph tools such as `create_entities`, `create_relations`, `read_graph`,
+`search_nodes`, and `open_nodes`. This workspace currently preserves `memlong`
+semantics instead of claiming graph-tool parity. Use `add_memory` and
+`search_memories` for durable fact extraction and hybrid retrieval; graph-tool
+compatibility remains a future bridge task. See
+[docs/parity/memory.md](docs/parity/memory.md).
 
 ## Uninstall
 
@@ -181,12 +311,37 @@ not edit Codex, OpenCode, or Claude configuration files.
 - Path/process/network operations must keep explicit safety boundaries.
 - OpenCode/Codex compatibility must be verified with real `tools/list` smoke tests.
 
+Reusable MCP SDK smoke:
+
+```powershell
+.\scripts\tools-list-smoke.ps1 -Binary .\target\debug\time-server.exe -ExpectedToolCount 2 -ExpectedTools get_current_time,convert_time
+.\scripts\everything-protocol-smoke.ps1 -Binary .\target\debug\everything-server.exe
+.\scripts\prompts-resources-smoke.ps1 -Binary .\target\debug\everything-server.exe -ExpectedPromptCount 4 -ExpectedPrompts simple-prompt,args-prompt,completable-prompt,resource-prompt
+```
+
+Installer JSON reports must match [packaging/install-report.schema.json](packaging/install-report.schema.json).
+
+Full release readiness check:
+
+```powershell
+.\scripts\release-check.ps1
+```
+
+GitHub Release asset workflow:
+
+- [.github/workflows/release.yml](.github/workflows/release.yml)
+- Produces the documented Windows/Linux/macOS archives and `SHA256SUMS.txt`.
+- Runs `scripts/release-check.ps1` before packaging/upload.
+
+Documentation templates for future server ports:
+
+- [docs/templates/server-readme.md](docs/templates/server-readme.md)
+- [docs/templates/parity-table.md](docs/templates/parity-table.md)
+
 ## Next Work
 
-1. Port `git` with strict repository boundary validation and native process args.
-2. Define fetch SSRF/redirect/timeout/max-bytes policy before coding `fetch`.
-3. Import or wrap `cbm-mcp`, `rlm-mcp`, `nushell-mcp`, and `memlong`.
-4. Build common release packaging around these root install scripts.
+1. Decide whether to enable `rmcp` elicitation for `everything`; current parity is documented in [docs/parity/everything.md](docs/parity/everything.md).
+2. Run final readiness, commit, and push.
 
 ---
 
@@ -212,19 +367,31 @@ Desktop 與其他 MCP client 可直接使用的本機 stdio MCP servers。
 
 | Server | 原始語言 | 上游版本 | Rust 狀態 |
 |---|---:|---:|---|
-| `memory` | TypeScript | `0.6.3` | 以 `memlong` 作為 Rust 線 |
+| `memory` | TypeScript | `0.6.3` | 已從 `memlong` 導入：`crates/memory-server` + `crates/memory-core` |
+| `cbm` | Rust | `0.2.3` | 已導入：`crates/cbm-server` |
+| `rlm` | Rust | `0.1.6` | 已導入：`crates/rlm-server` |
+| `nushell` | Rust | `0.1.0` | 已導入：`crates/nushell-server` |
 | `filesystem` | TypeScript | `0.6.3` | 已 port：`crates/filesystem-server` |
-| `git` | Python | `0.6.2` | 待 Rust port |
+| `git` | Python | `0.6.2` | 已 port：`crates/git-server` |
 | `time` | Python | `0.6.2` | 已 port：`crates/time-server` |
-| `fetch` | Python | `0.6.3` | 待 Rust port，需先定安全策略 |
+| `fetch` | Python | `0.6.3` | 已 port：`crates/fetch-server` |
 | `sequential-thinking` | TypeScript | `0.6.2` | 已 port：`crates/sequential-thinking-server` |
-| `everything` | TypeScript | `2.0.0` | 預計作為 MCP protocol feature testbed |
+| `everything` | TypeScript | `2.0.0` | 已 port testbed：`crates/everything-server` |
 
 ## 工作區結構
 
 ```text
 crates/
+  cbm-server/                # 已導入的 codebase-memory MCP server
+  rlm-server/                # 已導入的 RLM MCP server
+  nushell-server/            # 已導入的 Nushell MCP server
+  memory-core/               # 已導入的 memlong storage/retrieval/consolidation core
+  memory-server/             # 已導入的 memlong MCP server
+  memory-cli/                # 已導入的 memlong debug/maintenance CLI
   filesystem-server/         # 含 path safety 與 MCP Roots 的 filesystem MCP server
+  fetch-server/              # 含 SSRF 防護的 bounded web fetch MCP server
+  git-server/                # 含 repository validation 的 Git MCP server
+  everything-server/         # MCP tools/prompts/resources compatibility testbed
   sequential-thinking-server/# stateful sequential thinking MCP server
   time-server/               # timezone current/convert MCP server
   server-inventory/          # typed source/version/reuse inventory
@@ -235,6 +402,8 @@ VERSIONING.md                # 版本與 release 政策
 spec.md                      # 必須保留的功能與安全規格
 plan.md                      # 實作計畫
 todos.md                     # 可交給代理直接開工的任務清單
+docs/templates/              # 後續 port 可複製的 README/parity templates
+.github/workflows/release.yml # GitHub Release asset workflow
 ```
 
 ## 建置與驗證
@@ -244,6 +413,8 @@ cargo fmt --check
 cargo test --all-targets
 cargo clippy --all-targets -- -D warnings
 cargo run -p mcp-servers -- inventory
+.\scripts\tools-list-smoke.ps1 -Binary .\target\debug\git-server.exe -ExpectedToolCount 12
+.\scripts\release-check.ps1
 ```
 
 ## 安裝
@@ -299,14 +470,28 @@ cargo run -p mcp-servers -- inventory
 
 installer 接受的 server 名稱：
 
+- `cbm`
+- `everything`
 - `filesystem`
+- `fetch`
+- `git`
+- `memory`
+- `nushell`
+- `rlm`
 - `time`
 - `sequential-thinking`
 - `all`
 
 安裝後的 binary 名稱：
 
+- `cbm`
 - `filesystem-server`
+- `fetch-server`
+- `git-server`
+- `everything-server`
+- `memory-mcp-server`
+- `nushell-mcp`
+- `rlm-mcp`
 - `time-server`
 - `sequential-thinking-server`
 
@@ -318,9 +503,38 @@ installer 接受的 server 名稱：
 Codex config 範例：
 
 ```toml
+[mcp_servers.cbm]
+command = "C:/Users/you/.config/mpc-servers/bin/cbm.exe"
+args = []
+
 [mcp_servers.filesystem]
 command = "C:/Users/you/.config/mpc-servers/bin/filesystem-server.exe"
 args = ["D:/workspace"]
+
+[mcp_servers.git]
+command = "C:/Users/you/.config/mpc-servers/bin/git-server.exe"
+args = ["--repository", "D:/workspace/repo"]
+
+[mcp_servers.fetch]
+command = "C:/Users/you/.config/mpc-servers/bin/fetch-server.exe"
+args = []
+
+[mcp_servers.memory]
+command = "C:/Users/you/.config/mpc-servers/bin/memory-mcp-server.exe"
+args = []
+
+[mcp_servers.memory.env]
+LLM_API_BASE = "http://localhost:8080/v1"
+LLM_API_KEY = "local"
+PROJECT_ROOT = "D:/workspace"
+
+[mcp_servers.nushell]
+command = "C:/Users/you/.config/mpc-servers/bin/nushell-mcp.exe"
+args = []
+
+[mcp_servers.rlm]
+command = "C:/Users/you/.config/mpc-servers/bin/rlm-mcp.exe"
+args = []
 
 [mcp_servers.time]
 command = "C:/Users/you/.config/mpc-servers/bin/time-server.exe"
@@ -336,9 +550,55 @@ OpenCode config 範例：
 ```json
 {
   "mcp": {
+    "cbm": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\cbm.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
     "filesystem": {
       "type": "local",
       "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\filesystem-server.exe", "D:\\workspace"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "git": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\git-server.exe", "--repository", "D:\\workspace\\repo"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "fetch": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\fetch-server.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "memory": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\memory-mcp-server.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {
+        "LLM_API_BASE": "http://localhost:8080/v1",
+        "LLM_API_KEY": "local",
+        "PROJECT_ROOT": "D:\\workspace"
+      }
+    },
+    "nushell": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\nushell-mcp.exe"],
+      "enabled": true,
+      "timeout": 120000,
+      "environment": {}
+    },
+    "rlm": {
+      "type": "local",
+      "command": ["C:\\Users\\you\\.config\\mpc-servers\\bin\\rlm-mcp.exe"],
       "enabled": true,
       "timeout": 120000,
       "environment": {}
@@ -346,6 +606,29 @@ OpenCode config 範例：
   }
 }
 ```
+
+## Memory 設定與相容性
+
+`memory` server 是已導入的 Rust `memlong` 線，提供 `add_memory`、
+`search_memories`、`get_memories`、`delete_memory`、`consolidate_memories`、
+`get_memory_stats`、`end_session` 等長期記憶工具。
+
+預設資料會放在 `PROJECT_ROOT/.opencode/`：
+
+- `MEMORY_DB_PATH`：SQLite metadata database
+- `MEMORY_VECTOR_PATH`：USearch vector index
+- `MEMORY_TANTIVY_PATH`：Tantivy BM25 index directory
+
+如果不手動指定這些路徑，請至少設定 `PROJECT_ROOT`，讓不同 workspace 的記憶資料
+互相隔離。`LLM_API_BASE`、`LLM_API_KEY`、`EXTRACTION_MODEL`、`EMBEDDING_MODEL`
+與 `EMBEDDING_DIM` 需對應本機或遠端 OpenAI-compatible endpoint。
+
+相容性說明：TypeScript reference `memory` server 提供 `create_entities`、
+`create_relations`、`read_graph`、`search_nodes`、`open_nodes` 等 knowledge graph
+tools。目前 workspace 保留的是 `memlong` 語意，不宣稱 graph-tool parity；請用
+`add_memory` 與 `search_memories` 做 durable fact extraction 與 hybrid retrieval。
+reference graph tools bridge 是後續工作。詳見
+[docs/parity/memory.md](docs/parity/memory.md)。
 
 ## 解除安裝
 
@@ -373,9 +656,34 @@ OpenCode config 範例：
 - path/process/network 操作必須有明確安全邊界。
 - OpenCode/Codex 相容性必須用實際 `tools/list` smoke tests 驗證。
 
+可重用 MCP SDK smoke：
+
+```powershell
+.\scripts\tools-list-smoke.ps1 -Binary .\target\debug\time-server.exe -ExpectedToolCount 2 -ExpectedTools get_current_time,convert_time
+.\scripts\everything-protocol-smoke.ps1 -Binary .\target\debug\everything-server.exe
+.\scripts\prompts-resources-smoke.ps1 -Binary .\target\debug\everything-server.exe -ExpectedPromptCount 4 -ExpectedPrompts simple-prompt,args-prompt,completable-prompt,resource-prompt
+```
+
+Installer JSON report 必須符合 [packaging/install-report.schema.json](packaging/install-report.schema.json)。
+
+完整 release readiness check：
+
+```powershell
+.\scripts\release-check.ps1
+```
+
+GitHub Release asset workflow：
+
+- [.github/workflows/release.yml](.github/workflows/release.yml)
+- 會產生文件列出的 Windows/Linux/macOS archives 與 `SHA256SUMS.txt`。
+- 打包與上傳前會先執行 `scripts/release-check.ps1`。
+
+後續 server port 文件模板：
+
+- [docs/templates/server-readme.md](docs/templates/server-readme.md)
+- [docs/templates/parity-table.md](docs/templates/parity-table.md)
+
 ## 下一步
 
-1. port `git`，保留 repository 邊界驗證與 native process args。
-2. 實作 `fetch` 前先定 SSRF、redirect、timeout、max-bytes 策略。
-3. 導入或包裝 `cbm-mcp`、`rlm-mcp`、`nushell-mcp`、`memlong`。
-4. 以本次 root install scripts 為基礎建立共用 release packaging。
+1. 決定是否為 `everything` 啟用 `rmcp` elicitation；目前 parity 見 [docs/parity/everything.md](docs/parity/everything.md)。
+2. 執行最終 readiness、commit、push。
